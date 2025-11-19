@@ -548,7 +548,12 @@ COMMIT;
 
 **Результат:** Аналитик видит разные значения среднего рейтинга и количества отзывов при первом и втором чтении из-за нового отзыва.
 
-**(Скриншот: T1 показывает два разных результата с разными рейтингами, T2 показывает INSERT и COMMIT)**
+Первое чтение T1 <br>
+<img width="547" height="78" alt="image" src="https://github.com/user-attachments/assets/2e4e9836-f479-425c-b973-4a6c3717ae5d" />
+
+Второе чтение T1 <br>
+<img width="542" height="84" alt="image" src="https://github.com/user-attachments/assets/e1feb5a3-f68d-49c7-9f6c-85538512a235" />
+
 
 ---
 
@@ -593,7 +598,10 @@ COMMIT; -- Продавец подтверждает изменения
 
 **Результат:** Бухгалтер видит одинаковые значения при обоих чтениях, несмотря на то, что продавец изменил данные. Это гарантирует согласованность отчета - данные не меняются в рамках транзакции.
 
-**(Скриншот: T1 показывает два одинаковых результата, T2 показывает UPDATE и COMMIT, после COMMIT T1 видим что данные изменились)**
+Первое чтение T1 <br>
+<img width="544" height="74" alt="image" src="https://github.com/user-attachments/assets/1a48102c-f462-45e7-97b0-f4472c7ecd06" />
+Второе чтение T1 <br>
+<img width="544" height="74" alt="image" src="https://github.com/user-attachments/assets/1a48102c-f462-45e7-97b0-f4472c7ecd06" />
 
 #### Задание 6: Подсчет активных объявлений продавца
 
@@ -644,7 +652,11 @@ COMMIT;
 
 **Результат:** Менеджер видит одинаковое количество объявлений при обоих чтениях, несмотря на то, что продавец добавил новое. В PostgreSQL на уровне REPEATABLE READ фантомное чтение предотвращается.
 
-**(Скриншот: T1 показывает два одинаковых COUNT, T2 показывает INSERT и COMMIT)**
+Первое чтение T1 <br>
+<img width="260" height="73" alt="image" src="https://github.com/user-attachments/assets/30ea91db-aaf2-472d-a855-1f8a1ab7e3fc" />
+
+Второе чтение T1 <br>
+<img width="260" height="73" alt="image" src="https://github.com/user-attachments/assets/30ea91db-aaf2-472d-a855-1f8a1ab7e3fc" />
 
 ---
 
@@ -702,9 +714,15 @@ WHERE ad_id = 2;
 COMMIT;
 ```
 
-**Результат:** Одна из транзакций получит ошибку "could not serialize access due to concurrent update". Это предотвращает двойную продажу одного автомобиля - только один покупатель сможет завершить покупку.
+**Результат:** Одна из транзакций получит ошибку "не удалось сериализовать доступ из-за параллельного изменения ". Это предотвращает двойную продажу одного автомобиля - только один покупатель сможет завершить покупку.
 
-**(Скриншот: обе транзакции, одна получает ошибку сериализации)**
+T1  <br>
+<img width="312" height="84" alt="image" src="https://github.com/user-attachments/assets/23286a27-ba94-414d-8155-6faa08f88d48" />
+
+T2  <br>
+<img width="653" height="126" alt="image" src="https://github.com/user-attachments/assets/0aa7281b-2354-4229-96ef-7b8cba30768f" />
+
+
 
 #### Задание 8: Два продавца одновременно меняют цену - обработка конфликта
 
@@ -761,7 +779,15 @@ COMMIT;
 
 **Результат:** Одна из транзакций получит ошибку сериализации. После обработки ошибки транзакцию нужно повторить, чтобы учесть изменения, сделанные другой транзакцией.
 
-**(Скриншот: ошибка сериализации, повтор транзакции с чтением актуальных данных, успешное выполнение)**
+T1 <br>
+<img width="222" height="83" alt="image" src="https://github.com/user-attachments/assets/be4699ae-4899-479f-a804-02148b87a0ca" />
+
+Попытка T2 <br>
+<img width="541" height="109" alt="image" src="https://github.com/user-attachments/assets/cf2155f8-3500-44ac-972a-8314a9be8f02" />
+
+Вторая попытка T2 <br>
+<img width="221" height="78" alt="image" src="https://github.com/user-attachments/assets/7abccdc1-32b3-44f8-b596-53944d5ce451" />
+
 
 ---
 
@@ -780,7 +806,10 @@ SELECT COUNT(*) as hyundai_count FROM service.vehicles WHERE brand = 'Hyundai' A
 SELECT COUNT(*) as hyundai_ads_count FROM service.ads WHERE header_text LIKE 'Hyundai%';
 ```
 <br>
-*(Скриншот: состояние ДО транзакции)*
+<img width="190" height="90" alt="image" src="https://github.com/user-attachments/assets/db7f3361-8e0b-452e-8b8e-dc912c73980e" />
+
+<br>
+<img width="202" height="79" alt="image" src="https://github.com/user-attachments/assets/3bec7cb6-bfae-4081-b895-df11014f6f9b" />
 
 ```sql
 -- Транзакция: продавец публикует объявление, но передумал добавлять фото
@@ -830,20 +859,21 @@ SELECT * FROM service.ad_photos WHERE ad_id IN (SELECT ad_id FROM service.ads WH
 -- Завершаем транзакцию (сохраняем только транспортное средство)
 COMMIT;
 ```
+До SAVEPOINT before_ad;
 <br>
-*(Скриншот: выполнение транзакции с SAVEPOINT, состояние после ROLLBACK TO SAVEPOINT)*
+<img width="457" height="82" alt="image" src="https://github.com/user-attachments/assets/8dcdb27d-39fd-4623-a028-897acfb19cf1" />
 
-После COMMIT:
-```sql
--- Транспортное средство сохранено
-SELECT vehicle_id, brand, model, vin FROM service.vehicles WHERE brand = 'Hyundai' AND model = 'Solaris' AND vin = 'Z94CB41BBLR123456';
-
--- Объявление и фото не сохранились (откатились)
-SELECT COUNT(*) as hyundai_ads_count FROM service.ads WHERE header_text LIKE 'Hyundai%';
-SELECT COUNT(*) as hyundai_photos_count FROM service.ad_photos WHERE ad_id IN (SELECT ad_id FROM service.ads WHERE header_text LIKE 'Hyundai%');
-```
+Между SAVEPOINT before_ad и ROLLBACK TO SAVEPOINT before_ad
 <br>
-*(Скриншот: финальное состояние после COMMIT - только транспортное средство сохранено)*
+<img width="221" height="142" alt="image" src="https://github.com/user-attachments/assets/62dba599-7860-485c-86e7-a6812f0a53b0" />
+
+После ROLLBACK TO SAVEPOINT before_ad;
+<br>
+<img width="451" height="69" alt="image" src="https://github.com/user-attachments/assets/e1a1b24d-57cb-4df2-bad1-ce2398efa9a4" />
+<br>
+<img width="902" height="129" alt="image" src="https://github.com/user-attachments/assets/c2bcbc7b-f1d8-4b5d-86be-aae5a61afdba" />
+<br>
+<img width="351" height="102" alt="image" src="https://github.com/user-attachments/assets/b885cfc2-4b56-4613-8ced-6f73a8096b01" />
 
 **Результат:** После ROLLBACK TO SAVEPOINT транспортное средство осталось в базе, а объявление и фотографии откатились. После COMMIT в базе осталось только транспортное средство.
 
@@ -859,7 +889,8 @@ SELECT COUNT(*) as hyundai_photos_count FROM service.ad_photos WHERE ad_id IN (S
 SELECT COUNT(*) as user_exists FROM service.users WHERE email = 'volkov@example.com';
 ```
 <br>
-*(Скриншот: состояние ДО транзакции)*
+<img width="157" height="82" alt="image" src="https://github.com/user-attachments/assets/1f94b41b-1221-43ac-a69b-724ae66d023b" />
+
 
 ```sql
 -- Транзакция: регистрация нового продавца с возможностью отката на разных этапах
@@ -936,7 +967,17 @@ SELECT 'Ads', COUNT(*) FROM service.ads WHERE header_text = 'Продаю чер
 COMMIT;
 ```
 <br>
-*(Скриншот: выполнение транзакции с двумя SAVEPOINT, состояние после каждого ROLLBACK)*
+<img width="462" height="78" alt="image" src="https://github.com/user-attachments/assets/bb020a80-8f71-4c84-8ea3-2d7fa979a83a" />
+<br>
+<img width="446" height="89" alt="image" src="https://github.com/user-attachments/assets/f4bca7f5-9259-45ae-abc5-26711ebd61fc" />
+<br>
+<img width="464" height="94" alt="image" src="https://github.com/user-attachments/assets/bb625d58-7996-45fb-95e6-985e894e50aa" />
+
+<br>
+<img width="220" height="133" alt="image" src="https://github.com/user-attachments/assets/7acbaa4a-81a3-4a3f-885c-2b5952463ab1" />
+<br>
+<img width="220" height="136" alt="image" src="https://github.com/user-attachments/assets/53c74232-d607-45a4-9857-ae50ce127231" />
+
 
 После COMMIT:
 ```sql
@@ -953,7 +994,15 @@ SELECT COUNT(*) as vehicles_count FROM service.vehicles WHERE brand = 'Mazda' AN
 SELECT COUNT(*) as ads_count FROM service.ads WHERE header_text = 'Продаю через новую площадку';
 ```
 <br>
-*(Скриншот: финальное состояние после COMMIT - только пользователь сохранен)*
+<img width="482" height="82" alt="image" src="https://github.com/user-attachments/assets/d007a879-a354-4934-86cb-488a05b87d57" />
+<br>
+<img width="175" height="80" alt="image" src="https://github.com/user-attachments/assets/cb8b1cfb-f6dd-48c9-a8be-69e9e7a50520" />
+
+<br>
+<img width="201" height="81" alt="image" src="https://github.com/user-attachments/assets/c8d413f2-ef9c-4c0f-b0e6-d86212336c94" />
+
+<br>
+<img width="157" height="93" alt="image" src="https://github.com/user-attachments/assets/5b69df6f-1879-4c38-9b65-7641dce0313f" />
 
 **Результат:** 
 - После ROLLBACK TO SAVEPOINT after_seller_profile: пользователь и продавец остались, транспортное средство откатилось
