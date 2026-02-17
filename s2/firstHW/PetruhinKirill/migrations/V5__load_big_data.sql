@@ -1,9 +1,12 @@
+ALTER TABLE service.ads
+  ADD COLUMN IF NOT EXISTS tags text[] NOT NULL DEFAULT ARRAY[]::text[];
+
 INSERT INTO service.users(user_id, full_name, email, phone_number, registration_date)
 SELECT
   gs,
   'User ' || gs,
-  'user' || gs || '@mail.com',                               
-  CASE WHEN random() < 0.15 THEN NULL                       
+  'user' || gs || '@mail.com',
+  CASE WHEN random() < 0.15 THEN NULL
        ELSE '+' || (10000000000 + floor(random()*89999999999))::bigint::text
   END,
   now() - (floor(random()*365)::int || ' days')::interval
@@ -22,15 +25,9 @@ FROM generate_series(1, 250000) gs;
 SELECT setval(pg_get_serial_sequence('service.sellers','seller_id'), 250000, true);
 
 WITH
-  bt AS (
-    SELECT id, row_number() OVER (ORDER BY id) rn FROM service.body_types
-  ),
-  tr AS (
-    SELECT id, row_number() OVER (ORDER BY id) rn FROM service.transmissions
-  ),
-  ft AS (
-    SELECT id, row_number() OVER (ORDER BY id) rn FROM service.fuel_types
-  ),
+  bt AS (SELECT id, row_number() OVER (ORDER BY id) rn FROM service.body_types),
+  tr AS (SELECT id, row_number() OVER (ORDER BY id) rn FROM service.transmissions),
+  ft AS (SELECT id, row_number() OVER (ORDER BY id) rn FROM service.fuel_types),
   btcnt AS (SELECT count(*)::int c FROM service.body_types),
   trcnt AS (SELECT count(*)::int c FROM service.transmissions),
   ftcnt AS (SELECT count(*)::int c FROM service.fuel_types)
@@ -41,27 +38,24 @@ INSERT INTO service.vehicles(
 )
 SELECT
   gs,
-  -- brand/model can be skewed or uniform; here mostly uniform list
   (ARRAY['Toyota','BMW','Mercedes','Audi','Kia','Hyundai','VW','Skoda','Renault','Nissan','Ford','Lada'])[1+floor(random()*12)::int],
   'Model-' || (1+floor(random()*50)::int),
   (1990 + floor(random()*36))::int,
-  CASE WHEN random() < 0.10 THEN NULL                    
+  CASE WHEN random() < 0.10 THEN NULL
        ELSE (ARRAY['black','white','silver','red','blue'])[1+floor(random()*5)::int]
   END,
-  (SELECT id FROM bt, btcnt WHERE rn = (gs % btcnt.c) + 1),    
-  (SELECT id FROM tr, trcnt WHERE rn = (gs % trcnt.c) + 1),    
-  (SELECT id FROM ft, ftcnt WHERE rn = (gs % ftcnt.c) + 1),   
+  (SELECT id FROM bt, btcnt WHERE rn = (gs % btcnt.c) + 1),
+  (SELECT id FROM tr, trcnt WHERE rn = (gs % trcnt.c) + 1),
+  (SELECT id FROM ft, ftcnt WHERE rn = (gs % ftcnt.c) + 1),
   (70 + floor(random()*300))::int,
-  (ARRAY['new','used','damaged'])[1+floor(random()*3)::int,  
-  upper(substring(md5(gs::text), 1, 17))                       
+  (ARRAY['new','used','damaged'])[1+floor(random()*3)::int],
+  upper(substring(md5(gs::text), 1, 17))
 FROM generate_series(1, 250000) gs;
 
 SELECT setval(pg_get_serial_sequence('service.vehicles','vehicle_id'), 250000, true);
 
 WITH
-  st AS (
-    SELECT id, row_number() OVER (ORDER BY id) rn FROM service.ad_statuses
-  ),
+  st AS (SELECT id, row_number() OVER (ORDER BY id) rn FROM service.ad_statuses),
   stcnt AS (SELECT count(*)::int c FROM service.ad_statuses)
 INSERT INTO service.ads(
   ad_id, seller_id, vehicle_id, header_text, description, price,
@@ -70,17 +64,17 @@ INSERT INTO service.ads(
 SELECT
   gs,
   CASE
-    WHEN random() < 0.70 THEN 1 + floor(random()*25000)::int   
+    WHEN random() < 0.70 THEN 1 + floor(random()*25000)::int
     ELSE 25001 + floor(random()*225000)::int
-  END AS seller_id,
-  1 + floor(random()*250000)::int AS vehicle_id,
+  END,
+  1 + floor(random()*250000)::int,
   'Selling car #' || gs,
-  CASE WHEN random() < 0.10 THEN NULL                            
+  CASE WHEN random() < 0.10 THEN NULL
        ELSE 'Great condition ' || md5(gs::text)
   END,
   (100000 + floor(random()*4900000))::int,
   now() - (floor(random()*365)::int || ' days')::interval,
-  (SELECT id FROM st, stcnt WHERE rn = (gs % stcnt.c) + 1)      
+  (SELECT id FROM st, stcnt WHERE rn = (gs % stcnt.c) + 1)
 FROM generate_series(1, 250000) gs;
 
 SELECT setval(pg_get_serial_sequence('service.ads','ad_id'), 250000, true);
