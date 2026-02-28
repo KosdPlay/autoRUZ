@@ -1,6 +1,44 @@
-ALTER TABLE service.ads
-  ADD COLUMN IF NOT EXISTS tags text[] NOT NULL DEFAULT ARRAY[]::text[];
+﻿-- ============================================
+-- Справочники (без изменений)
+-- ============================================
+INSERT INTO service.body_types(code, name) VALUES
+  ('sedan','Sedan'),
+  ('hatchback','Hatchback'),
+  ('suv','SUV'),
+  ('coupe','Coupe'),
+  ('truck','Truck'),
+  ('van','Van')
+ON CONFLICT DO NOTHING;
 
+INSERT INTO service.transmissions(code, name) VALUES
+  ('manual','Manual'),
+  ('automatic','Automatic'),
+  ('cvt','CVT')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO service.fuel_types(code, name) VALUES
+  ('petrol','Petrol'),
+  ('diesel','Diesel'),
+  ('electric','Electric'),
+  ('hybrid','Hybrid')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO service.ad_statuses(code, name) VALUES
+  ('active','Active'),
+  ('sold','Sold'),
+  ('blocked','Blocked'),
+  ('draft','Draft')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO service.moderator_roles(code, name) VALUES
+  ('supervisor','Supervisor'),
+  ('editor','Editor'),
+  ('viewer','Viewer')
+ON CONFLICT DO NOTHING;
+
+-- ============================================
+-- Генерация пользователей и продавцов
+-- ============================================
 INSERT INTO service.users(user_id, full_name, email, phone_number, registration_date)
 SELECT
   gs,
@@ -24,6 +62,9 @@ FROM generate_series(1, 250000) gs;
 
 SELECT setval(pg_get_serial_sequence('service.sellers','seller_id'), 250000, true);
 
+-- ============================================
+-- Генерация транспортных средств
+-- ============================================
 WITH
   bt AS (SELECT id, row_number() OVER (ORDER BY id) rn FROM service.body_types),
   tr AS (SELECT id, row_number() OVER (ORDER BY id) rn FROM service.transmissions),
@@ -54,6 +95,9 @@ FROM generate_series(1, 250000) gs;
 
 SELECT setval(pg_get_serial_sequence('service.vehicles','vehicle_id'), 250000, true);
 
+-- ============================================
+-- Генерация объявлений (только исходные колонки)
+-- ============================================
 WITH
   st AS (SELECT id, row_number() OVER (ORDER BY id) rn FROM service.ad_statuses),
   stcnt AS (SELECT count(*)::int c FROM service.ad_statuses)
@@ -79,22 +123,34 @@ FROM generate_series(1, 250000) gs;
 
 SELECT setval(pg_get_serial_sequence('service.ads','ad_id'), 250000, true);
 
-UPDATE service.ads
-SET
-  doc = to_tsvector('russian', coalesce(header_text,'') || ' ' || coalesce(description,'')),
-  meta = jsonb_build_object(
-    'views', floor(random()*5000)::int,
-    'owners', (1+floor(random()*4))::int,
-    'accident', (random() < 0.15),
-    'source', (ARRAY['web','mobile','api'])[1+floor(random()*3)::int]
-  ),
-  tags = ARRAY[
-    (ARRAY['hot','new','promo','vip','urgent'])[1+floor(random()*5)::int],
-    (ARRAY['dealer','private','tradein'])[1+floor(random()*3)::int]
-  ],
-  active_period = tsrange(
-    publication_date,
-    publication_date + (floor(random()*30)::int || ' days')::interval,
-    '[]'
-  )
-WHERE doc IS NULL OR active_period IS NULL OR tags = '{}'::text[] OR meta = '{}'::jsonb;
+-- ============================================
+-- Опционально: генерация связанных данных
+-- ============================================
+-- Пример для ad_photos (если нужно)
+INSERT INTO service.ad_photos(ad_id, url, is_primary)
+SELECT
+  1 + floor(random()*250000)::int,
+  'https://example.com/img/' || gs || '.jpg',
+  random() < 0.2
+FROM generate_series(1, 500000) gs;
+
+-- Пример для favourites
+INSERT INTO service.favourites(user_id, ad_id, added_at)
+SELECT
+  1 + floor(random()*250000)::int,
+  1 + floor(random()*250000)::int,
+  now() - (floor(random()*365)::int || ' days')::interval
+FROM generate_series(1, 100000) gs
+ON CONFLICT (user_id, ad_id) DO NOTHING;
+
+-- Пример для feedbacks
+INSERT INTO service.feedbacks(user_id, seller_id, ad_id, text, rating, publication_date)
+SELECT
+  CASE WHEN random() < 0.9 THEN 1 + floor(random()*250000)::int ELSE NULL END,
+  1 + floor(random()*250000)::int,
+  1 + floor(random()*250000)::int,
+  'Feedback text ' || gs,
+  round((random()*5)::numeric, 2),
+  now() - (floor(random()*365)::int || ' days')::interval
+FROM generate_series(1, 50000) gs
+ON CONFLICT (user_id, seller_id, ad_id) DO NOTHING;
