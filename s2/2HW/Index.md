@@ -1,4 +1,4 @@
-DROP INDEX IF EXISTS service.idx_vehicles_brand_btree;
+п»їDROP INDEX IF EXISTS service.idx_vehicles_brand_btree;
 DROP INDEX IF EXISTS service.idx_vehicles_year_btree;
 DROP INDEX IF EXISTS service.idx_ads_price_btree;
 DROP INDEX IF EXISTS service.idx_users_email_btree;
@@ -16,37 +16,37 @@ ANALYZE service.users;
 
 
 -- ============================================================================
--- 1. ТЕСТИРОВАНИЕ БЕЗ ИНДЕКСОВ
+-- 1. РўР•РЎРўРР РћР’РђРќРР• Р‘Р•Р— РРќР”Р•РљРЎРћР’
 -- ============================================================================
 
--- Запрос 1: Оператор = (равенство)
+-- Р—Р°РїСЂРѕСЃ 1: РћРїРµСЂР°С‚РѕСЂ = (СЂР°РІРµРЅСЃС‚РІРѕ)
 EXPLAIN SELECT * FROM service.vehicles WHERE brand = 'Toyota';
 EXPLAIN (ANALYZE) SELECT * FROM service.vehicles WHERE brand = 'Toyota';
 EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM service.vehicles WHERE brand = 'Toyota';
 
--- Запрос 2: Оператор > (больше)
+-- Р—Р°РїСЂРѕСЃ 2: РћРїРµСЂР°С‚РѕСЂ > (Р±РѕР»СЊС€Рµ)
 EXPLAIN SELECT * FROM service.vehicles WHERE year_of_manufacture > 2020;
 EXPLAIN (ANALYZE) SELECT * FROM service.vehicles WHERE year_of_manufacture > 2020;
 EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM service.vehicles WHERE year_of_manufacture > 2020;
 
--- Запрос 3: Оператор < (меньше)
+-- Р—Р°РїСЂРѕСЃ 3: РћРїРµСЂР°С‚РѕСЂ < (РјРµРЅСЊС€Рµ)
 EXPLAIN SELECT * FROM service.ads WHERE price < 500000;
 EXPLAIN (ANALYZE) SELECT * FROM service.ads WHERE price < 500000;
 EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM service.ads WHERE price < 500000;
 
--- Запрос 4: Оператор LIKE 'prefix%' (префикс)
+-- Р—Р°РїСЂРѕСЃ 4: РћРїРµСЂР°С‚РѕСЂ LIKE 'prefix%' (РїСЂРµС„РёРєСЃ)
 EXPLAIN SELECT * FROM service.users WHERE email LIKE 'user1%';
 EXPLAIN (ANALYZE) SELECT * FROM service.users WHERE email LIKE 'user1%';
 EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM service.users WHERE email LIKE 'user1%';
 
--- Запрос 5: Оператор IN (множество значений)
+-- Р—Р°РїСЂРѕСЃ 5: РћРїРµСЂР°С‚РѕСЂ IN (РјРЅРѕР¶РµСЃС‚РІРѕ Р·РЅР°С‡РµРЅРёР№)
 EXPLAIN SELECT * FROM service.vehicles WHERE state_code IN ('new', 'used');
 EXPLAIN (ANALYZE) SELECT * FROM service.vehicles WHERE state_code IN ('new', 'used');
 EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM service.vehicles WHERE state_code IN ('new', 'used');
 
 
 -- ============================================================================
--- 2. СОЗДАНИЕ B-TREE ИНДЕКСОВ И ТЕСТИРОВАНИЕ
+-- 2. РЎРћР—Р”РђРќРР• B-TREE РРќР”Р•РљРЎРћР’ Р РўР•РЎРўРР РћР’РђРќРР•
 -- ============================================================================
 CREATE INDEX idx_vehicles_brand_btree ON service.vehicles USING btree (brand);
 CREATE INDEX idx_vehicles_year_btree ON service.vehicles USING btree (year_of_manufacture);
@@ -58,34 +58,34 @@ ANALYZE service.vehicles;
 ANALYZE service.ads;
 ANALYZE service.users;
 
--- Запрос 1: = с B-tree
+-- Р—Р°РїСЂРѕСЃ 1: = СЃ B-tree
 EXPLAIN SELECT * FROM service.vehicles WHERE brand = 'Toyota';
 EXPLAIN (ANALYZE) SELECT * FROM service.vehicles WHERE brand = 'Toyota';
 EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM service.vehicles WHERE brand = 'Toyota';
 
--- Запрос 2: > с B-tree
+-- Р—Р°РїСЂРѕСЃ 2: > СЃ B-tree
 EXPLAIN SELECT * FROM service.vehicles WHERE year_of_manufacture > 2020;
 EXPLAIN (ANALYZE) SELECT * FROM service.vehicles WHERE year_of_manufacture > 2020;
 EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM service.vehicles WHERE year_of_manufacture > 2020;
 
--- Запрос 3: < с B-tree
+-- Р—Р°РїСЂРѕСЃ 3: < СЃ B-tree
 EXPLAIN SELECT * FROM service.ads WHERE price < 500000;
 EXPLAIN (ANALYZE) SELECT * FROM service.ads WHERE price < 500000;
 EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM service.ads WHERE price < 500000;
 
--- Запрос 4: LIKE 'prefix%' с B-tree
+-- Р—Р°РїСЂРѕСЃ 4: LIKE 'prefix%' СЃ B-tree
 EXPLAIN SELECT * FROM service.users WHERE email LIKE 'user1%';
 EXPLAIN (ANALYZE) SELECT * FROM service.users WHERE email LIKE 'user1%';
 EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM service.users WHERE email LIKE 'user1%';
 
--- Запрос 5: IN с B-tree
+-- Р—Р°РїСЂРѕСЃ 5: IN СЃ B-tree
 EXPLAIN SELECT * FROM service.vehicles WHERE state_code IN ('new', 'used');
 EXPLAIN (ANALYZE) SELECT * FROM service.vehicles WHERE state_code IN ('new', 'used');
 EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM service.vehicles WHERE state_code IN ('new', 'used');
 
 
 -- ============================================================================
--- 3. СОЗДАНИЕ HASH ИНДЕКСОВ И ТЕСТИРОВАНИЕ
+-- 3. РЎРћР—Р”РђРќРР• HASH РРќР”Р•РљРЎРћР’ Р РўР•РЎРўРР РћР’РђРќРР•
 -- ============================================================================
 CREATE INDEX idx_vehicles_brand_hash ON service.vehicles USING hash (brand);
 CREATE INDEX idx_vehicles_state_hash ON service.vehicles USING hash (state_code);
@@ -94,35 +94,35 @@ CREATE INDEX idx_users_email_hash ON service.users USING hash (email);
 ANALYZE service.vehicles;
 ANALYZE service.users;
 
--- Запрос 1: = с Hash
+-- Р—Р°РїСЂРѕСЃ 1: = СЃ Hash
 EXPLAIN SELECT * FROM service.vehicles WHERE brand = 'Toyota';
 EXPLAIN (ANALYZE) SELECT * FROM service.vehicles WHERE brand = 'Toyota';
 EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM service.vehicles WHERE brand = 'Toyota';
 
--- Запрос 5: IN с Hash
+-- Р—Р°РїСЂРѕСЃ 5: IN СЃ Hash
 EXPLAIN SELECT * FROM service.vehicles WHERE state_code IN ('new', 'used');
 EXPLAIN (ANALYZE) SELECT * FROM service.vehicles WHERE state_code IN ('new', 'used');
 EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM service.vehicles WHERE state_code IN ('new', 'used');
 
--- Дополнительно: email = с Hash
+-- Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅРѕ: email = СЃ Hash
 EXPLAIN SELECT * FROM service.users WHERE email = 'user12345@mail.com';
 EXPLAIN (ANALYZE) SELECT * FROM service.users WHERE email = 'user12345@mail.com';
 EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM service.users WHERE email = 'user12345@mail.com';
 
 
 -- ============================================================================
--- 4. СОСТАВНОЙ ИНДЕКС (COMPOSITE INDEX)
+-- 4. РЎРћРЎРўРђР’РќРћР™ РРќР”Р•РљРЎ (COMPOSITE INDEX)
 -- ============================================================================
 CREATE INDEX idx_vehicles_brand_year_btree ON service.vehicles USING btree (brand, year_of_manufacture);
 
 ANALYZE service.vehicles;
 
--- Запрос: использует обе колонки составного индекса
+-- Р—Р°РїСЂРѕСЃ: РёСЃРїРѕР»СЊР·СѓРµС‚ РѕР±Рµ РєРѕР»РѕРЅРєРё СЃРѕСЃС‚Р°РІРЅРѕРіРѕ РёРЅРґРµРєСЃР°
 EXPLAIN SELECT * FROM service.vehicles WHERE brand = 'Toyota' AND year_of_manufacture > 2020;
 EXPLAIN (ANALYZE) SELECT * FROM service.vehicles WHERE brand = 'Toyota' AND year_of_manufacture > 2020;
 EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM service.vehicles WHERE brand = 'Toyota' AND year_of_manufacture > 2020;
 
--- Запрос: использует только вторую колонку (неэффективно)
+-- Р—Р°РїСЂРѕСЃ: РёСЃРїРѕР»СЊР·СѓРµС‚ С‚РѕР»СЊРєРѕ РІС‚РѕСЂСѓСЋ РєРѕР»РѕРЅРєСѓ (РЅРµСЌС„С„РµРєС‚РёРІРЅРѕ)
 EXPLAIN SELECT * FROM service.vehicles WHERE year_of_manufacture > 2020;
 EXPLAIN (ANALYZE) SELECT * FROM service.vehicles WHERE year_of_manufacture > 2020;
 EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM service.vehicles WHERE year_of_manufacture > 2020;
