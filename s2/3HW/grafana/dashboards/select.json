@@ -1,0 +1,25 @@
+{
+  "id": null,
+  "title": "SELECT Queries",
+  "panels": [
+    {
+      "type": "graph",
+      "title": "SELECT Rate",
+      "targets": [
+        {
+          "expr": "rate(pg_stat_statements_calls_total{query=~\"SELECT.*\"}[5m])",
+          "legendFormat": "SELECT",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      }
+    }
+  ],
+  "schemaVersion": 37,
+  "version": 1
+}

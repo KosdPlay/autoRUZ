@@ -1,0 +1,25 @@
+{
+  "id": null,
+  "title": "Active Sessions",
+  "panels": [
+    {
+      "type": "graph",
+      "title": "Active Sessions",
+      "targets": [
+        {
+          "expr": "pg_stat_activity_count",
+          "legendFormat": "sessions",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      }
+    }
+  ],
+  "schemaVersion": 37,
+  "version": 1
+}

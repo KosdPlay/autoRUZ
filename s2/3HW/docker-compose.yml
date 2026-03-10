@@ -1,0 +1,64 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:15
+    container_name: my_postgres
+    environment:
+      POSTGRES_PASSWORD: 1234567890
+      POSTGRES_USER: postgres
+      POSTGRES_DB: service_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+
+  flyway:
+    image: flyway/flyway
+    container_name: flyway
+    command: -url=jdbc:postgresql://db:5432/service_db -user=postgres -password=1234567890 -schemas=service migrate
+    volumes:
+      - ./migrations:/flyway/sql
+    depends_on:
+      - db
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter
+    container_name: postgres_exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:1234567890@db:5432/service_db?sslmode=disable"
+    ports:
+      - "9187:9187"
+    depends_on:
+      - db
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - postgres-exporter
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-clock-panel
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
+volumes:
+  db_data:
+  grafana_data:

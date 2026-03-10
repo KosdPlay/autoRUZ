@@ -1,0 +1,25 @@
+{
+  "id": null,
+  "title": "INSERT Queries",
+  "panels": [
+    {
+      "type": "graph",
+      "title": "INSERT Rate",
+      "targets": [
+        {
+          "expr": "rate(pg_stat_statements_calls_total{query=~\"INSERT.*\"}[5m])",
+          "legendFormat": "INSERT",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      }
+    }
+  ],
+  "schemaVersion": 37,
+  "version": 1
+}
