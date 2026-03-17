@@ -25,7 +25,8 @@ WAL (Write-Ahead Logging) - это механизм логирования в Po
 -- LSN ДО INSERT
 SELECT pg_current_wal_lsn() as lsn_before_insert;
 ```
-///
+<img width="172" height="56" alt="Снимок экрана 2026-03-17 182933" src="https://github.com/user-attachments/assets/476a6023-4b68-4ca0-856e-af6e5afcacff" />
+
 
 ```sql
 -- Вставка данных
@@ -37,8 +38,7 @@ ON CONFLICT DO NOTHING;
 SELECT pg_current_wal_lsn() as lsn_after_insert;
 ```
 
-
-///
+<img width="163" height="61" alt="Снимок экрана 2026-03-17 183010" src="https://github.com/user-attachments/assets/843059e5-3f20-4b5d-ae96-cc06d28afd9e" />
 
 Вывод: LSN вырос, в WAL записалась информация об INSERT
 
@@ -49,7 +49,8 @@ SELECT pg_current_wal_lsn() as lsn_after_insert;
 SELECT pg_current_wal_lsn() as lsn_before_transaction;
 ```
 
-///
+<img width="201" height="60" alt="Снимок экрана 2026-03-17 183037" src="https://github.com/user-attachments/assets/d6305be2-52cc-41f9-8a18-f0b5f38e6d08" />
+
 ```sql
 -- Начало транзакции
 BEGIN;
@@ -62,7 +63,8 @@ ON CONFLICT DO NOTHING;
 -- LSN ДО COMMIT (данные в WAL, но не закоммичено)
 SELECT pg_current_wal_lsn() as lsn_before_commit;
 ```
-///
+<img width="187" height="59" alt="Снимок экрана 2026-03-17 183103" src="https://github.com/user-attachments/assets/e675e959-1c6f-4660-a275-b0996cba9f63" />
+
 
 ```sql
 -- COMMIT
@@ -71,8 +73,8 @@ COMMIT;
 -- LSN ПОСЛЕ COMMIT (добавилась COMMIT запись в WAL)
 SELECT pg_current_wal_lsn() as lsn_after_commit;
 ```
+<img width="174" height="54" alt="Снимок экрана 2026-03-17 183139" src="https://github.com/user-attachments/assets/1f26a4a7-ae6c-4459-bec4-1e3298c29335" />
 
-///
 
 Вывод: COMMIT добавляет отдельную запись в WAL
 
@@ -84,7 +86,8 @@ SELECT pg_current_wal_lsn() as lsn_after_commit;
 SELECT pg_current_wal_lsn() as lsn_before;
 ```
 
-///
+<img width="130" height="65" alt="Снимок экрана 2026-03-17 184052" src="https://github.com/user-attachments/assets/ebd8580a-58d0-4b9b-8038-1b02637b9f52" />
+
 
 ```sql
 -- БОЛЬШАЯ ВСТАВКА
@@ -103,17 +106,19 @@ ON CONFLICT (vin) DO NOTHING;
 SELECT pg_current_wal_lsn() as lsn_after;
 ```
 
-///
+<img width="125" height="63" alt="Снимок экрана 2026-03-17 184139" src="https://github.com/user-attachments/assets/7e29be66-824e-44a8-a0f8-0632132093bd" />
+
 
 -- Разница LSN (в байтах)
 ```sql
 SELECT pg_wal_lsn_diff(
-  '0/XXXXX'::pg_lsn,  -- подставь lsn_after
-  '0/YYYYY'::pg_lsn   -- подставь lsn_before
+  '0/1C4400F8'::pg_lsn,
+  '0/1D332830'::pg_lsn
 ) as bytes_written_to_wal;
 ```
 
-///
+<img width="193" height="59" alt="Снимок экрана 2026-03-17 184351" src="https://github.com/user-attachments/assets/cbc0dcbf-f827-46f8-a699-cbfb9e7dc794" />
+
 
 ## 3) DUMP И RESTORE БД
 
@@ -191,6 +196,10 @@ ON CONFLICT (code) DO NOTHING;
 
 ### 4b) Проверка идемпотентности seed (ON CONFLICT)
 ```sql
+SELECT COUNT(*) as users_count FROM service.users WHERE email LIKE 'test.user.%@example.com';
+```
+<img width="140" height="58" alt="Снимок экрана 2026-03-17 185415" src="https://github.com/user-attachments/assets/090d0eee-5cff-432b-bd0f-4d1a728109a4" />
+```sql
 -- Попытка вставить одни и те же данные второй раз - ничего не добавится
 INSERT INTO service.users(full_name, email, phone_number) VALUES
   ('Test User 1', 'test.user.1@example.com', '+79001234567'),
@@ -200,10 +209,10 @@ ON CONFLICT (email) DO NOTHING;
 -- Проверка: количество пользователей не изменилось
 
 SELECT COUNT(*) as users_count FROM service.users WHERE email LIKE 'test.user.%@example.com';
-COMMIT;
 ```
 
-///
+<img width="140" height="58" alt="Снимок экрана 2026-03-17 185415" src="https://github.com/user-attachments/assets/090d0eee-5cff-432b-bd0f-4d1a728109a4" />
+
 ```sql
 -- ON CONFLICT DO UPDATE - обновление при дубле
 
@@ -219,7 +228,8 @@ SELECT full_name, email, phone_number
 FROM service.users 
 WHERE email = 'test.user.1@example.com';
 ```
-///
+<img width="435" height="52" alt="Снимок экрана 2026-03-17 185439" src="https://github.com/user-attachments/assets/e830cc88-d086-444a-af4f-bdda7b6b5181" />
+
 ```sql
 -- ON CONFLICT для body_types с обновлением
 INSERT INTO service.body_types(code, name) VALUES
@@ -230,4 +240,4 @@ DO UPDATE SET name = EXCLUDED.name;
 -- Проверка: body_type обновлен
 SELECT code, name FROM service.body_types WHERE code = 'sport';
 ```
-///
+<img width="224" height="56" alt="Снимок экрана 2026-03-17 185459" src="https://github.com/user-attachments/assets/2ae9bfcf-c9a5-4e40-a2d6-880b7e1631e0" />
