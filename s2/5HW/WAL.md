@@ -42,7 +42,7 @@ SELECT pg_current_wal_lsn() as lsn_after_insert;
 
 Вывод: LSN вырос, в WAL записалась информация об INSERT
 
-## 2b) Сравнение WAL до и после COMMIT ==========
+## 2b) Сравнение WAL до и после COMMIT
 
 ```sql
 -- LSN ДО транзакции
