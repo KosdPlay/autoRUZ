@@ -198,7 +198,9 @@ ON CONFLICT (code) DO NOTHING;
 ```sql
 SELECT COUNT(*) as users_count FROM service.users WHERE email LIKE 'test.user.%@example.com';
 ```
+
 <img width="140" height="58" alt="Снимок экрана 2026-03-17 185415" src="https://github.com/user-attachments/assets/090d0eee-5cff-432b-bd0f-4d1a728109a4" />
+
 ```sql
 -- Попытка вставить одни и те же данные второй раз - ничего не добавится
 INSERT INTO service.users(full_name, email, phone_number) VALUES
