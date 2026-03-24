@@ -228,15 +228,24 @@ ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name;
 docker exec -it pg_replica1 psql -U postgres -d service_db -c "SELECT * FROM service.body_types WHERE code='phys_test';"
 ```
 
+<img width="1091" height="128" alt="Снимок экрана 2026-03-24 215625" src="https://github.com/user-attachments/assets/21764c83-3b0e-4e79-9edc-14922c29ebd9" />
+
+
 ### 3) Проверка на replica2 (консоль)
 ```bat
 docker exec -it pg_replica2 psql -U postgres -d service_db -c "SELECT * FROM service.body_types WHERE code='phys_test';"
 ```
 
+<img width="1093" height="124" alt="Снимок экрана 2026-03-24 215646" src="https://github.com/user-attachments/assets/46e45d07-9f30-48fb-bddd-8ba3bf00ef15" />
+
+
 ### 4) Попытка вставки на реплике (консоль)
 ```bat
 docker exec -it pg_replica1 psql -U postgres -d service_db -c "INSERT INTO service.body_types(code,name) VALUES ('replica_write','X');"
 ```
+
+<img width="1095" height="70" alt="Снимок экрана 2026-03-24 215701" src="https://github.com/user-attachments/assets/b2f275a2-2d58-4f07-a337-3f27576f7848" />
+
 
 Ожидаемый результат: ошибка записи на standby (read-only).
 
@@ -256,6 +265,9 @@ ON CONFLICT (vin) DO NOTHING;
 ```bat
 docker exec -it pg_master psql -U postgres -d service_db -c "SELECT client_addr, state, sync_state, pg_size_pretty(pg_wal_lsn_diff(pg_current_wal_lsn(), replay_lsn)) AS lag_bytes FROM pg_stat_replication;"
 ```
+
+<img width="1103" height="177" alt="Снимок экрана 2026-03-24 223800" src="https://github.com/user-attachments/assets/2b7b86dd-70dc-4cf7-a27b-513db3bad57e" />
+
 
 ---
 
@@ -288,6 +300,9 @@ ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name;
 docker exec -it pg_logical_sub psql -U postgres -d service_db -c "SELECT * FROM service.body_types WHERE code='log_test';"
 ```
 
+<img width="1095" height="129" alt="Снимок экрана 2026-03-24 225230" src="https://github.com/user-attachments/assets/01698f54-a01f-4305-baeb-4425092faf83" />
+
+
 ### B) DDL не реплицируется
 1) Master (DBeaver):
 ```sql
@@ -298,5 +313,8 @@ ALTER TABLE service.body_types ADD COLUMN ddl_added text;
 ```bat
 docker exec -it pg_logical_sub psql -U postgres -d service_db -c "\d service.body_types"
 ```
+
+<img width="1104" height="293" alt="Снимок экрана 2026-03-24 225344" src="https://github.com/user-attachments/assets/e630a2e3-89a3-472d-879c-cf437328ce4f" />
+
 
 Ожидаемый результат: колонка `ddl_added` отсутствует на subscriber.
