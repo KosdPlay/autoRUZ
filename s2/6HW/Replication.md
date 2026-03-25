@@ -257,7 +257,7 @@ docker exec -it pg_replica1 psql -U postgres -d service_db -c "INSERT INTO servi
 ```sql
 INSERT INTO service.vehicles(brand, model, year_of_manufacture, state_code, vin, power_hp)
 SELECT 'LagBrand','LagModel',2020,'used','LAGVIN' || lpad(g::text, 11, '0'),150
-FROM generate_series(1, 50000) g
+FROM generate_series(1, 500000) g
 ON CONFLICT (vin) DO NOTHING;
 ```
 
