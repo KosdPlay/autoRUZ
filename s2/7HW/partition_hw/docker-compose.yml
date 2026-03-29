@@ -1,0 +1,78 @@
+services:
+  hw7_master:
+    image: postgres:15
+    container_name: hw7_master
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: service_db
+    ports:
+      - "5544:5432"
+    volumes:
+      - hw7_pg_master_data:/var/lib/postgresql/data
+      - ./pg_hba_master.conf:/etc/postgresql/pg_hba_master.conf:ro
+    command: >
+      postgres
+      -c listen_addresses='*'
+      -c hba_file=/etc/postgresql/pg_hba_master.conf
+      -c wal_level=logical
+      -c max_wal_senders=10
+      -c max_replication_slots=10
+      -c hot_standby=on
+      -c wal_keep_size=512MB
+      -c password_encryption=md5
+
+  flyway_hw7_master:
+    image: flyway/flyway:latest
+    container_name: flyway_hw7_master
+    depends_on:
+      - hw7_master
+    command: -url=jdbc:postgresql://hw7_master:5432/service_db -user=postgres -password=postgres -schemas=service migrate
+    volumes:
+      - ./migrations:/flyway/sql
+
+  hw7_replica:
+    image: postgres:15
+    container_name: hw7_replica
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: service_db
+    ports:
+      - "5545:5432"
+    volumes:
+      - hw7_pg_replica_data:/var/lib/postgresql/data
+    depends_on:
+      - hw7_master
+
+  hw7_logical_sub:
+    image: postgres:15
+    container_name: hw7_logical_sub
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: service_db
+    ports:
+      - "5546:5432"
+    volumes:
+      - hw7_pg_logical_data:/var/lib/postgresql/data
+    command: >
+      postgres
+      -c listen_addresses='*'
+      -c wal_level=logical
+      -c max_wal_senders=10
+      -c max_replication_slots=10
+
+  flyway_hw7_logical:
+    image: flyway/flyway:latest
+    container_name: flyway_hw7_logical
+    depends_on:
+      - hw7_logical_sub
+    command: -url=jdbc:postgresql://hw7_logical_sub:5432/service_db -user=postgres -password=postgres -schemas=service migrate
+    volumes:
+      - ./migrations:/flyway/sql
+
+volumes:
+  hw7_pg_master_data:
+  hw7_pg_replica_data:
+  hw7_pg_logical_data:
