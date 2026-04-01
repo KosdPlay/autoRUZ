@@ -221,8 +221,6 @@ docker exec -it hw7_master psql -U postgres -d service_db -c "SELECT client_addr
 ### Листинг `V3__partitioning_lab.sql` (совпадает с файлом миграции)
 
 ```sql
--- Секционированные таблицы для ДЗ: только DDL (данные — в V4__load_big_data.sql).
-
 -- RANGE: пробег по дате записи (FK на service.vehicles — строки появятся после V4)
 CREATE TABLE service.mileage_partitioned (
     mileage_id     BIGSERIAL,
@@ -317,24 +315,50 @@ EXPLAIN (ANALYZE, BUFFERS)
 SELECT * FROM service.mileage_partitioned
 WHERE recorded_at >= TIMESTAMP '2025-01-01'
   AND recorded_at < TIMESTAMP '2026-01-01';
+```
 
+<img width="930" height="177" alt="Снимок экрана 2026-03-29 154953" src="https://github.com/user-attachments/assets/eaf5487c-0537-435d-b112-169815725b1b" />
+
+```sql
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT * FROM service.mileage_partitioned;
+```
 
+<img width="891" height="267" alt="Снимок экрана 2026-03-29 155025" src="https://github.com/user-attachments/assets/0decf117-be3d-47a7-951c-f1dda9da467b" />
+
+
+```sql
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT * FROM service.contracts_partitioned
 WHERE status = 'active';
+```
 
+<img width="884" height="176" alt="Снимок экрана 2026-03-29 155047" src="https://github.com/user-attachments/assets/a4db0775-8f9b-4248-af3b-b64c6f2a0564" />
+
+
+```sql
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT * FROM service.contracts_partitioned;
+```
 
+<img width="925" height="264" alt="Снимок экрана 2026-03-29 155103" src="https://github.com/user-attachments/assets/4ec95484-ae86-4896-81d5-6a8a9847d6ca" />
+
+
+```sql
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT * FROM service.ads_partitioned
 WHERE seller_id = 7;
+```
 
+<img width="922" height="253" alt="Снимок экрана 2026-03-29 155118" src="https://github.com/user-attachments/assets/b6c8aa7e-f8aa-481f-9779-a6dc418c2564" />
+
+
+```sql
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT * FROM service.ads_partitioned;
 ```
+
+<img width="920" height="294" alt="Снимок экрана 2026-03-29 155140" src="https://github.com/user-attachments/assets/ef94f44c-d5e8-4fff-8697-e4ac90f22720" />
 
 Выполнение — на **master** (`hw7_master`), база `service_db`, схема `service`. Итоговые формулировки для отчёта сверяются с фактическим текстом `EXPLAIN`.
 
@@ -358,6 +382,9 @@ EXPLAIN (ANALYZE, BUFFERS)
 SELECT * FROM service.contracts_partitioned
 WHERE status = 'active' AND seller_id = 1;
 ```
+
+<img width="931" height="147" alt="Снимок экрана 2026-03-29 163422" src="https://github.com/user-attachments/assets/4b40c7c5-5153-407e-9a1e-d6200e9f97ee" />
+
 
 **LIST, полная выборка.**  
 **a)** Pruning нет.  
@@ -388,6 +415,9 @@ WHERE status = 'active' AND seller_id = 1;
 docker exec -it hw7_replica psql -U postgres -d service_db -c "\d+ service.mileage_partitioned"
 ```
 
+<img width="1688" height="371" alt="Снимок экрана 2026-03-29 163619" src="https://github.com/user-attachments/assets/6cb8cddb-6c3e-4494-981d-2385090cce8b" />
+
+
 ```sql
 SELECT c.relname, pg_get_expr(c.relpartbound, c.oid) AS bounds
 FROM pg_class c
@@ -395,6 +425,8 @@ JOIN pg_inherits i ON i.inhrelid = c.oid
 JOIN pg_class p ON p.oid = i.inhparent AND p.relname = 'mileage_partitioned'
 ORDER BY 1;
 ```
+
+<img width="603" height="109" alt="Снимок экрана 2026-03-29 163640" src="https://github.com/user-attachments/assets/4cddf40d-0978-496b-97c6-f08d21af2333" />
 
 В результате видны родитель и партиции `mileage_p2024`, `mileage_p2025`, `mileage_p2026` с границами.
 
@@ -459,6 +491,9 @@ VALUES (10, '2025-08-01', 'after sub');
 ```bat
 docker exec -it hw7_logical_sub psql -U postgres -d service_db -c "SELECT * FROM service.logical_part_root ORDER BY created_at;"
 ```
+
+<img width="367" height="119" alt="Снимок экрана 2026-03-29 165025" src="https://github.com/user-attachments/assets/e4cee9e9-322a-4581-9fd3-375fe0417d18" />
+
 
 ---
 
@@ -645,6 +680,9 @@ EXPLAIN (VERBOSE, COSTS)
 SELECT * FROM shard_fdw.all_listings;
 ```
 
+<img width="566" height="178" alt="Снимок экрана 2026-03-29 165847" src="https://github.com/user-attachments/assets/3d66039f-209a-4ae5-aafa-5822011ea831" />
+
+
 Типичный план: **Append** с двумя ветками **Foreign Scan** (внешние таблицы на `shard1` и `shard2`), так как представление — `UNION ALL` двух foreign table.
 
 **Простой запрос на один шард (только данные с первого сервера):**
@@ -654,26 +692,8 @@ EXPLAIN (VERBOSE, COSTS)
 SELECT * FROM shard_fdw.listings;
 ```
 
+<img width="425" height="97" alt="Снимок экрана 2026-03-29 165916" src="https://github.com/user-attachments/assets/f8c4747f-42e2-4675-bc25-cc1fe90e8f0d" />
+
+
 Типичный план: один **Foreign Scan** по `shard_fdw.listings` с удалённым запросом к `fdw_shard1`. Детали строки плана зависят от версии `postgres_fdw` и настроек; для отчёта копируется фактический вывод `EXPLAIN`.
 
----
-
-### Полный список каталога `7HW` (обе части)
-
-```
-7HW/
-  Partitioning.md
-  partition_hw/
-    docker-compose.yml
-    pg_hba_master.conf
-    migrations/
-      V1__init_schema.sql
-      V2__seed_reference.sql
-      V3__partitioning_lab.sql
-      V4__load_big_data.sql
-  fdw_hw/
-    docker-compose.yml
-    shard1/init/01_shard.sql
-    shard2/init/01_shard.sql
-    router/setup_fdw.sql
-```
