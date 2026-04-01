@@ -10,7 +10,11 @@ FROM store_checks
 WHERE shop_id = 77
   AND sold_at >= TIMESTAMP '2025-02-14 00:00:00'
   AND sold_at < TIMESTAMP '2025-02-15 00:00:00';
+```
 
+<img width="723" height="186" alt="Снимок экрана 2026-04-01 112810" src="https://github.com/user-attachments/assets/d4aa8212-5496-4155-9bf9-46c3b29fac9a" />
+
+```sql
 CREATE INDEX idx_store_checks_shop_sold_at
 ON store_checks (shop_id, sold_at);
 
@@ -21,6 +25,8 @@ WHERE shop_id = 77
   AND sold_at >= TIMESTAMP '2025-02-14 00:00:00'
   AND sold_at < TIMESTAMP '2025-02-15 00:00:00';
 ```
+
+<img width="717" height="175" alt="Снимок экрана 2026-04-01 112853" src="https://github.com/user-attachments/assets/3b4e359a-4b76-4e3f-9c9d-7476a85e2b69" />
 
 ### Краткие пояснения
 - **До изменений**: `Seq Scan on store_checks`, удалено фильтром `70001` строк, `Execution Time: ~13.7 ms`.
@@ -40,7 +46,11 @@ JOIN club_visits v ON v.member_id = m.id
 WHERE m.member_level = 'premium'
   AND v.visit_at >= TIMESTAMP '2025-02-01 00:00:00'
   AND v.visit_at < TIMESTAMP '2025-02-10 00:00:00';
+```
 
+<img width="725" height="440" alt="Снимок экрана 2026-04-01 113046" src="https://github.com/user-attachments/assets/9be88aef-7667-4bcc-8b14-31e27d5ec9b5" />
+
+```sql
 CREATE INDEX idx_club_visits_visit_member_inc
 ON club_visits (visit_at, member_id) INCLUDE (spend);
 
@@ -52,6 +62,9 @@ WHERE m.member_level = 'premium'
   AND v.visit_at >= TIMESTAMP '2025-02-01 00:00:00'
   AND v.visit_at < TIMESTAMP '2025-02-10 00:00:00';
 ```
+
+<img width="579" height="376" alt="Снимок экрана 2026-04-01 113151" src="https://github.com/user-attachments/assets/213ee8c5-e83b-4d28-aaf3-325910a87cf3" />
+
 
 ### Краткие пояснения
 - **Тип JOIN до изменений**: `Hash Join`.
