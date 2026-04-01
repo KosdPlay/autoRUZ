@@ -1,0 +1,34 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: pg_course
+    environment:
+      POSTGRES_DB: course_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin_pass
+    ports:
+      - "5434:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  flyway:
+    image: flyway/flyway
+    depends_on:
+      - postgres
+    command: 
+      - "migrate"
+      - "-baselineOnMigrate=true"
+    volumes:
+      - ./db/migrations:/flyway/sql
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/course_db
+      FLYWAY_USER: admin
+      FLYWAY_PASSWORD: admin_pass
+      FLYWAY_BASELINE_VERSION: 1
+      FLYWAY_BASELINE_DESCRIPTION: "Initial baseline"
+      FLYWAY_SCHEMAS: public 
+
+volumes:
+  pg_data:
